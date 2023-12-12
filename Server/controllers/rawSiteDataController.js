@@ -3,191 +3,105 @@ const rawSiteDataModel = require("../model/rawSiteDataModel.js");
 
 const electricianDataModel = require("../model/electricianDataModel.js");
 
+// Function to sending raw sites data with pagination
 const gettingAllRawSiteDataController = async (req, res) => {
     try {
         const currentPage = parseInt(req.params.currentPage) || 1;
         const rawSitesPerPage = parseInt(req.params.rawSitesPerPage) || 10;
         const skip = (currentPage - 1) * rawSitesPerPage;
+
+
         const rawSites = await rawSiteDataModel.find({})
             .skip(skip)
-
             .limit(rawSitesPerPage)
             .populate({
                 path: "assignedElectritian",
                 populate: {
                     path: "assignedSites"
-
                 }
             })
-
 
         res.status(200).send({
             status: true,
             rawSites: rawSites,
         })
     } catch (error) {
-
         res.status(500).send({
             status: false,
-
             message: error.message
         })
+
     }
 }
 
 
+// Function to quick update raw site with electrician
 const quickUpdateAllRawSitesWithElectricianController = async (req, res) => {
     try {
-
         const updatesRawSitesWithGrievance = await rawSiteDataModel.find({})
-
         let status = false;
 
         // console.log('updatesRawSitesWithGrievance:', updatesRawSitesWithGrievance)
         for (const rawSite of updatesRawSitesWithGrievance) {
             try {
-
                 if (rawSite?.grievance) {
-                    console.log('rawSite:', rawSite)
+                    // console.log('rawSite:', rawSite)
                     const electricianWithGrievance = await electricianDataModel.findOne(
                         { "grievanceElectrician": true, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
                     )
-                    console.log('electricianWithGrievance:', electricianWithGrievance)
+                    // console.log('electricianWithGrievance:', electricianWithGrievance)
+
                     if (electricianWithGrievance) {
                         status = true;
                         const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
-
                             { _id: rawSite._id },
                             { $push: { "assignedElectritian": electricianWithGrievance._id } }, { new: true }
                         )
+                        // console.log('updateRawSite:', updateRawSite)
 
-                        console.log('updateRawSite:', updateRawSite)
                         const newAssignedSite = {
+
                             _id: rawSite._id,
-
-
                             electricianAssignDate: rawSite.installationDate
                         }
                         const updateElectrician = await electricianDataModel.findByIdAndUpdate(
                             { _id: electricianWithGrievance._id },
                             { $push: { "assignedSites": newAssignedSite } }, { new: true }
                         )
-                        console.log('updateElectrician:', updateElectrician)
+                        // console.log('updateElectrician:', updateElectrician)
+                    }
 
-                    } 
                 } else if (!rawSite?.grievance) {
-                    console.log('rawSite 1:', rawSite)
+                    // console.log('rawSite 1:', rawSite)
                     const electricianWithOutGrievance = await electricianDataModel.findOne(
                         { "grievanceElectrician": false, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "zone": { $elemMatch: { $eq: rawSite.city } }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
                     )
-
-                    console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
+                    // console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
                     if (electricianWithOutGrievance) {
-
                         status = true;
                         const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
+
                             { _id: rawSite._id },
                             { $push: { "assignedElectritian": electricianWithOutGrievance._id } }, { new: true }
-
                         )
-                        console.log('updateRawSite:', updateRawSite)
+                        // console.log('updateRawSite:', updateRawSite)
                         const newAssignedSite = {
                             _id: rawSite._id,
-
                             electricianAssignDate: rawSite.installationDate
                         }
                         const updateElectrician = await electricianDataModel.findByIdAndUpdate(
-                            { _id: electricianWithOutGrievance._id },
 
+                            { _id: electricianWithOutGrievance._id },
                             { $push: { "assignedSites": newAssignedSite } }, { new: true }
                         )
-                        console.log('updateElectrician:', updateElectrician)
+                        // console.log('updateElectrician:', updateElectrician)
                     }
-                    
                 }
-                //     const grievanceElectrician = await electricianDataModel.findOne({ "grievanceElectrician": true, $expr: { $lt: [{ $size: "$assignedSites" }, 3] } });
-                //     // console.log('grievanceElectrician:', grievanceElectrician)
-
-
-                //     if (grievanceElectrician) {
-                //         // console.log('element:', element)
-
-                //         const isAlreadyAssigned = element.assignedElectritian.includes(grievanceElectrician._id);
-                //         if (!isAlreadyAssigned) {
-                //             let updateRawSitesWithElectrician = await rawSiteDataModel.findByIdAndUpdate(
-                //                 {
-                //                     _id: element._id,
-                //                     // "assignedElectritian": {
-                //                     //     $not: {
-                //                     //         $elemMatch: { $eq: grievanceElectrician._id }
-                //                     //     }
-                //                     // }
-                //                 },
-                //                 { $push: { "assignedElectritian": grievanceElectrician._id } }, { new: true }
-                //             )
-                //             // console.log('updateRawSitesWithElectrician:', updateRawSitesWithElectrician)
-                //             const newAssignedSite = {
-                //                 _id: element._id,
-
-                //                 electricianAssignDate: element.installationDate
-                //             }
-
-                //             // console.log('newAssignedSite:', newAssignedSite)
-                //             let grievanceElectricianUpdate = await electricianDataModel.findByIdAndUpdate(
-                //                 { _id: grievanceElectrician._id },
-                //                 { $push: { "assignedSites": newAssignedSite } }, { new: true }
-
-                //             )
-                //             // console.log('grievanceElectricianUpdate:', grievanceElectricianUpdate)
-                //         }
-                //     }
-
             } catch (error) {
                 console.log(error.message)
             }
+
         }
-
-        // const updatesRawSitesWithOutGrievance = await rawSiteDataModel.find({ "grievance": false });
-
-        // for (const element of updatesRawSitesWithOutGrievance) {
-        //     try {
-
-        //         const withoutGrievanceElectrician = await electricianDataModel.findOne({ "grievanceElectrician": false, zone: { $elemMatch: { $eq: element.city } }, $expr: { $lt: [{ $size: "$assignedSites" }, 3] } });
-        //         // console.log('element:', element)
-        //         // console.log('withoutGrievanceElectrician:', withoutGrievanceElectrician)
-
-        //         if (withoutGrievanceElectrician) {
-        //             const isAlreadyAssigned = element.assignedElectritian.includes(withoutGrievanceElectrician._id);
-        //             // console.log('isAlreadyAssigned:', isAlreadyAssigned)
-        //             const cityInZone = withoutGrievanceElectrician.zone.includes(element.city);
-        //             // console.log('cityInZone:', cityInZone)
-
-        //             if (!isAlreadyAssigned) {
-        //                 let updateRawSitesWithOutElectrician = await rawSiteDataModel.findByIdAndUpdate(
-        //                     { _id: element._id },
-        //                     { $push: { "assignedElectritian": withoutGrievanceElectrician._id } }, { new: true }
-        //                 )
-        //                 // console.log('updateRawSitesWithOutElectrician:', updateRawSitesWithOutElectrician)
-        //                 const newAssignedSite = {
-        //                     _id: element._id,
-
-        //                     electricianAssignDate: element.installationDate
-        //                 }
-        //                 // console.log('newAssignedSite:', newAssignedSite)
-        //                 let withoutGrievanceElectricianUpdate = await electricianDataModel.findByIdAndUpdate(
-        //                     { _id: withoutGrievanceElectrician._id },
-        //                     { $push: { "assignedSites": newAssignedSite } }, { new: true }
-        //                 )
-        //                 // console.log('withoutGrievanceElectricianUpdate:', withoutGrievanceElectricianUpdate)
-        //             }
-        //         }
-        //     } catch (error) {
-        //         return res.status(500).send({
-        //             status: false,
-        //             message: "Something Went Wrong Please try again later"
-        //         })
-        //     }
-        // }
 
         return res.status(200).send({
             status: status ? true : false,
@@ -204,81 +118,77 @@ const quickUpdateAllRawSitesWithElectricianController = async (req, res) => {
 
 }
 
+// Function to quick update pending electrician to raw sites
 const quickUpdateAllPendingRawSitesWithElectricianController = async (req, res) => {
-    try {
 
+    try {
         const gettingAllPendingRawSites = await rawSiteDataModel.find({ $expr: { $lt: [{ $size: "$assignedElectritian" }, 1] } });
         // console.log('gettingAllPendingRawSites:', gettingAllPendingRawSites)
         let status = false;
-
-
         if (gettingAllPendingRawSites) {
-
             for (const rawSite of gettingAllPendingRawSites) {
                 // console.log('rawSite:', rawSite)
                 if (rawSite?.grievance) {
                     const electricianWithGrievance = await electricianDataModel.findOne(
+
                         { "grievanceElectrician": true, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
                     )
                     // console.log('electricianWithGrievance:', electricianWithGrievance)
                     if (electricianWithGrievance) {
                         status = true;
                         const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
-
                             { _id: rawSite._id },
                             { $push: { "assignedElectritian": electricianWithGrievance._id } }, { new: true }
                         )
+
                         // console.log('updateRawSite:', updateRawSite)
                         const newAssignedSite = {
                             _id: rawSite._id,
-
-
                             electricianAssignDate: rawSite.installationDate
                         }
                         const updateElectrician = await electricianDataModel.findByIdAndUpdate(
                             { _id: electricianWithGrievance._id },
                             { $push: { "assignedSites": newAssignedSite } }, { new: true }
                         )
+
                         // console.log('updateElectrician:', updateElectrician)
                     } else {
                         const electricianWithOutGrievance = await electricianDataModel.findOne(
                             { "grievanceElectrician": false, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "zone": { $elemMatch: { $eq: rawSite.city } }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
                         )
-
                         // console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
                         if (electricianWithOutGrievance) {
                             status = false;
                             const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
+
                                 { _id: rawSite._id },
                                 { $push: { "assignedElectritian": electricianWithOutGrievance._id } }, { new: true }
-
                             )
-                            console.log('updateRawSite:', updateRawSite)
+                            // console.log('updateRawSite:', updateRawSite)
                             const newAssignedSite = {
                                 _id: rawSite._id,
-
                                 electricianAssignDate: rawSite.installationDate
                             }
                             const updateElectrician = await electricianDataModel.findByIdAndUpdate(
+
                                 { _id: electricianWithOutGrievance._id },
                                 { $push: { "assignedSites": newAssignedSite } }, { new: true }
                             )
-                            console.log('updateElectrician:', updateElectrician)
+                            // console.log('updateElectrician:', updateElectrician)
                         } else {
                             return res.status(200).send({
                                 status: status ? true : false,
                                 message: status ? "Updated Successfully" : "Electrician Not Available"
                             })
+
                         }
                     }
                 } else if (!rawSite?.grievance) {
-
-                    console.log('rawSite:', rawSite)
+                    // console.log('rawSite:', rawSite)
                     const electricianWithOutGrievance = await electricianDataModel.findOne(
                         { "grievanceElectrician": false, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "zone": { $elemMatch: { $eq: rawSite.city } }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
-
                     )
-                    console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
+                    // console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
                     if (electricianWithOutGrievance) {
 
                         status = true;
@@ -286,10 +196,8 @@ const quickUpdateAllPendingRawSitesWithElectricianController = async (req, res) 
                         const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
                             { _id: rawSite._id },
                             { $push: { "assignedElectritian": electricianWithOutGrievance._id } }, { new: true }
-
                         )
-
-                        console.log('updateRawSite:', updateRawSite)
+                        // console.log('updateRawSite:', updateRawSite)
                         const newAssignedSite = {
                             _id: rawSite._id,
 
@@ -299,33 +207,31 @@ const quickUpdateAllPendingRawSitesWithElectricianController = async (req, res) 
                             { _id: electricianWithOutGrievance._id },
                             { $push: { "assignedSites": newAssignedSite } }, { new: true }
                         )
-                        console.log('updateElectrician:', updateElectrician)
+                        // console.log('updateElectrician:', updateElectrician)
                     } else {
-
                         const electricianWithGrievance = await electricianDataModel.findOne(
-                            { "grievanceElectrician": true, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
 
+                            { "grievanceElectrician": true, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
                         )
-                        console.log('electricianWithGrievance:', electricianWithGrievance)
+                        // console.log('electricianWithGrievance:', electricianWithGrievance)
                         if (electricianWithGrievance) {
                             status = true;
                             const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
-
                                 { _id: rawSite._id },
                                 { $push: { "assignedElectritian": electricianWithGrievance._id } }, { new: true }
                             )
-                            console.log('updateRawSite:', updateRawSite)
+
+                            // console.log('updateRawSite:', updateRawSite)
                             const newAssignedSite = {
                                 _id: rawSite._id,
-
-
                                 electricianAssignDate: rawSite.installationDate
                             }
                             const updateElectrician = await electricianDataModel.findByIdAndUpdate(
                                 { _id: electricianWithGrievance._id },
                                 { $push: { "assignedSites": newAssignedSite } }, { new: true }
                             )
-                            console.log('updateElectrician:', updateElectrician)
+
+                            // console.log('updateElectrician:', updateElectrician)
                         } else {
                             return res.status(200).send({
                                 status: status ? true : false,
@@ -333,73 +239,15 @@ const quickUpdateAllPendingRawSitesWithElectricianController = async (req, res) 
                             })
                         }
                     }
-
                 } else {
+
                     res.status(500).send({
                         status: false,
                         message: "Something Went Wrong Please try again letter"
                     })
                 }
-                // console.log('element:', element)
-                // const grievanceElectrician = await electricianDataModel.findOne({ $expr: { $lt: [{ $size: "$assignedSites" }, 3] } });
-                // if (grievanceElectrician && grievanceElectrician.grievanceElectrician) {
-                // const isAlreadyAssigned = element.assignedElectritian.includes(grievanceElectrician._id);
-
-                // console.log('grievanceElectrician: true', grievanceElectrician);
-                // if (!isAlreadyAssigned) {
-                //         let updateRawSitesWithElectrician = await rawSiteDataModel.findByIdAndUpdate(
-                //             { _id: element._id },
-                //             { $push: { "assignedElectritian": grievanceElectrician._id } }, { new: true }
-                //         )
-                //         // console.log('updateRawSitesWithElectrician:', updateRawSitesWithElectrician)
-                //         const newAssignedSite = {
-                //             _id : element._id,
-
-                //             electricianAssignDate : element.installationDate
-                //         }
-                //         let updateGrievanceElectricianUpdate = await electricianDataModel.findByIdAndUpdate(
-                //             { _id: grievanceElectrician._id },
-                //             { $push: { "assignedSites": newAssignedSite } }, { new: true }
-                //         )
-                //         // console.log('updateGrievanceElectricianUpdate:', updateGrievanceElectricianUpdate)
-
-                //     }
-                // } else if (grievanceElectrician && !grievanceElectrician.grievanceElectrician) {
-                //     // console.log('grievanceElectrician: false', grievanceElectrician);
-                //     const isAlreadyAssigned = element.assignedElectritian.includes(grievanceElectrician._id);
-
-                //     const withoutGrievanceElectrician = await electricianDataModel.findOne({ "grievanceElectrician": false, zone: { $elemMatch: { $eq: element.city } }, $expr: { $lt: [{ $size: "$assignedSites" }, 3] } });
-
-                //     // console.log('withoutGrievanceElectrician:', withoutGrievanceElectrician);
-
-                //     if (withoutGrievanceElectrician && !isAlreadyAssigned) {
-                //         let updateRawSitesWithElectrician = await rawSiteDataModel.findByIdAndUpdate(
-                //             { _id: element._id },
-                //             { $push: { "assignedElectritian": withoutGrievanceElectrician._id } }, { new: true }
-                //         )
-                //         // console.log('updateRawSitesWithElectrician:', updateRawSitesWithElectrician)
-
-                //         const newAssignedSite = {
-                //             _id : element._id,
-
-
-                //             electricianAssignDate : element.installationDate
-                //         }
-                //         let updateGrievanceElectricianUpdate = await electricianDataModel.findByIdAndUpdate(
-                //             { _id: withoutGrievanceElectrician._id },
-                //             { $push: { "assignedSites": newAssignedSite } }, { new: true }
-                //         )
-                //         // console.log('updateGrievanceElectricianUpdate:', updateGrievanceElectricianUpdate)
-                //     }
-                // } else {
-                //     return res.status(200).send({
-                //         status: true,
-                //     })
-                // }
             }
-
         } else {
-
             return res.status(200).send({
                 status: false,
                 message: "There are no sites pending"
@@ -412,15 +260,14 @@ const quickUpdateAllPendingRawSitesWithElectricianController = async (req, res) 
     } catch (error) {
         res.status(500).send({
             status: false,
+
             mesage: "Something Went Wrong Please try again later"
         })
-
     }
-
 }
 
+// Function to update raw site based on grievance profile of electrician
 const singleRawSiteUpdateWithGrievanceElectrician = async (req, res) => {
-
     try {
         const rawSite = await rawSiteDataModel.findById({ _id: req.params.pId });
 
@@ -431,36 +278,33 @@ const singleRawSiteUpdateWithGrievanceElectrician = async (req, res) => {
             // console.log('electricianWithGrievance:', electricianWithGrievance)
             if (electricianWithGrievance) {
                 const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
-
                     { _id: rawSite._id },
                     { $push: { "assignedElectritian": electricianWithGrievance._id } }, { new: true }
+
                 )
                 // console.log('updateRawSite:', updateRawSite)
                 const newAssignedSite = {
                     _id: rawSite._id,
-
-
                     electricianAssignDate: rawSite.installationDate
                 }
                 const updateElectrician = await electricianDataModel.findByIdAndUpdate(
                     { _id: electricianWithGrievance._id },
                     { $push: { "assignedSites": newAssignedSite } }, { new: true }
+
                 )
                 // console.log('updateElectrician:', updateElectrician)
             } else {
                 return res.status(200).send({
                     status: false,
-
                     message: "Electrician Not Available"
                 })
             }
-
         } else if (!rawSite?.grievance) {
+
             // console.log('rawSite 1:', rawSite)
             const electricianWithOutGrievance = await electricianDataModel.findOne(
                 { "grievanceElectrician": false, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "zone": { $elemMatch: { $eq: rawSite.city } }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
             )
-
             // console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
             if (electricianWithOutGrievance) {
                 const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
@@ -471,13 +315,12 @@ const singleRawSiteUpdateWithGrievanceElectrician = async (req, res) => {
                 // console.log('updateRawSite:', updateRawSite)
                 const newAssignedSite = {
                     _id: rawSite._id,
-
                     electricianAssignDate: rawSite.installationDate
                 }
                 const updateElectrician = await electricianDataModel.findByIdAndUpdate(
                     { _id: electricianWithOutGrievance._id },
-
                     { $push: { "assignedSites": newAssignedSite } }, { new: true }
+
                 )
                 // console.log('updateElectrician:', updateElectrician)
             } else {
@@ -490,35 +333,32 @@ const singleRawSiteUpdateWithGrievanceElectrician = async (req, res) => {
 
         // console.log('rawSite:', rawSite)
         res.status(200).send({
-
             status: true,
-            message : "Updated Successfully"
+            message: "Updated Successfully"
         })
 
     } catch (error) {
         res.status(500).send({
-
             status: false,
+
             message: "Something Went Wrong Please try again later"
 
         })
     }
 }
 
+// Function to update raw site with random electrician
 const singleRawSiteUpdateWithAnyElectrician = async (req, res) => {
     try {
 
         const rawSite = await rawSiteDataModel.findById({ _id: req.params.pId });
         // console.log('rawSite:', rawSite);
-
-
         if (rawSite?.grievance) {
             const electricianWithGrievance = await electricianDataModel.findOne(
                 { "grievanceElectrician": true, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
             )
             // console.log('electricianWithGrievance:', electricianWithGrievance)
             if (electricianWithGrievance) {
-
                 const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
 
                     { _id: rawSite._id },
@@ -527,11 +367,10 @@ const singleRawSiteUpdateWithAnyElectrician = async (req, res) => {
                 // console.log('updateRawSite:', updateRawSite)
                 const newAssignedSite = {
                     _id: rawSite._id,
-
-
                     electricianAssignDate: rawSite.installationDate
                 }
                 const updateElectrician = await electricianDataModel.findByIdAndUpdate(
+
                     { _id: electricianWithGrievance._id },
                     { $push: { "assignedSites": newAssignedSite } }, { new: true }
                 )
@@ -540,81 +379,78 @@ const singleRawSiteUpdateWithAnyElectrician = async (req, res) => {
                 const electricianWithOutGrievance = await electricianDataModel.findOne(
                     { "grievanceElectrician": false, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "zone": { $elemMatch: { $eq: rawSite.city } }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
                 )
-
                 // console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
+
                 if (electricianWithOutGrievance) {
                     const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
                         { _id: rawSite._id },
                         { $push: { "assignedElectritian": electricianWithOutGrievance._id } }, { new: true }
-
                     )
-                    console.log('updateRawSite:', updateRawSite)
+                    // console.log('updateRawSite:', updateRawSite)
                     const newAssignedSite = {
                         _id: rawSite._id,
-
                         electricianAssignDate: rawSite.installationDate
+
                     }
                     const updateElectrician = await electricianDataModel.findByIdAndUpdate(
                         { _id: electricianWithOutGrievance._id },
                         { $push: { "assignedSites": newAssignedSite } }, { new: true }
                     )
-                    console.log('updateElectrician:', updateElectrician)
+                    // console.log('updateElectrician:', updateElectrician)
                 } else {
                     return res.status(200).send({
                         status: false,
+
                         message: "Electrician Not Available"
                     })
                 }
             }
-
         } else if (!rawSite?.grievance) {
             // console.log('rawSite:', rawSite)
-            const electricianWithGrievance = await electricianDataModel.findOne(
-                { "grievanceElectrician": true, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
+            const electricianWithOutGrievance = await electricianDataModel.findOne(
+                { "grievanceElectrician": false, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "zone": { $elemMatch: { $eq: rawSite.city } }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
             )
-            // console.log('electricianWithGrievance:', electricianWithGrievance)
-            if (electricianWithGrievance) {
-                const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
 
+            // console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
+            if (electricianWithOutGrievance) {
+                const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
                     { _id: rawSite._id },
-                    { $push: { "assignedElectritian": electricianWithGrievance._id } }, { new: true }
+                    { $push: { "assignedElectritian": electricianWithOutGrievance._id } }, { new: true }
                 )
-                console.log('updateRawSite:', updateRawSite)
+                // console.log('updateRawSite:', updateRawSite)
+
                 const newAssignedSite = {
                     _id: rawSite._id,
-
-
                     electricianAssignDate: rawSite.installationDate
                 }
                 const updateElectrician = await electricianDataModel.findByIdAndUpdate(
-                    { _id: electricianWithGrievance._id },
+                    { _id: electricianWithOutGrievance._id },
                     { $push: { "assignedSites": newAssignedSite } }, { new: true }
                 )
-                console.log('updateElectrician:', updateElectrician)
-            } else {
-                // console.log('electricianWithOutGrievance:', electricianWithOutGrievance)
-                const electricianWithOutGrievance = await electricianDataModel.findOne(
-                    { "grievanceElectrician": false, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "zone": { $elemMatch: { $eq: rawSite.city } }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
-                )
+                // console.log('updateElectrician:', updateElectrician)
 
-                if (electricianWithOutGrievance) {
+            } else {
+
+                const electricianWithGrievance = await electricianDataModel.findOne(
+                    { "grievanceElectrician": true, "_id": { $nin: rawSite.assignedElectritian }, "assignedSites._id": { $ne: rawSite._id }, "$expr": { $lt: [{ $size: "$assignedSites" }, 3] } }
+                )
+                // console.log('electricianWithGrievance:', electricianWithGrievance)
+                if (electricianWithGrievance) {
                     const updateRawSite = await rawSiteDataModel.findByIdAndUpdate(
                         { _id: rawSite._id },
-                        { $push: { "assignedElectritian": electricianWithOutGrievance._id } }, { new: true }
-
+                        { $push: { "assignedElectritian": electricianWithGrievance._id } }, { new: true }
                     )
 
-                    console.log('updateRawSite:', updateRawSite)
+                    // console.log('updateRawSite:', updateRawSite)
                     const newAssignedSite = {
                         _id: rawSite._id,
-
                         electricianAssignDate: rawSite.installationDate
                     }
                     const updateElectrician = await electricianDataModel.findByIdAndUpdate(
-                        { _id: electricianWithOutGrievance._id },
+                        { _id: electricianWithGrievance._id },
                         { $push: { "assignedSites": newAssignedSite } }, { new: true }
                     )
-                    console.log('updateElectrician:', updateElectrician)
+
                 } else {
                     return res.status(200).send({
                         status: false,
@@ -622,28 +458,30 @@ const singleRawSiteUpdateWithAnyElectrician = async (req, res) => {
                     })
                 }
             }
+
+            res.status(200).send({
+                status: true,
+                message: "Updated Successfully"
+            })
         }
 
-        res.status(200).send({
-            status: true,
-            message : "Updated Successfully"
-        })
-
     } catch (error) {
-
         res.status(500).send({
             status: false,
             message: error.message
+
         })
     }
 }
 
+
+// Function to updating raw site installation date
 const updateInstallationDateOfRawSiteController = async (req, res) => {
     try {
-
-        console.log('req.body.installationDate:', req.body.installationDate)
+        // console.log('req.body.installationDate:', req.body.installationDate)
         const installationDate = new Date(req.body.installationDate);
-        console.log('installationDate:', installationDate)
+
+        // console.log('installationDate:', installationDate)
         const rawSiteUpdate = await rawSiteDataModel.findByIdAndUpdate(
             { _id: req.params.pId },
             { installationDate: installationDate }, { new: true }
@@ -651,8 +489,8 @@ const updateInstallationDateOfRawSiteController = async (req, res) => {
 
         if (!rawSiteUpdate) {
             res.status(200).send({
-
                 status: false,
+
                 message: "Something went wrong please try again"
             })
         }
@@ -660,8 +498,9 @@ const updateInstallationDateOfRawSiteController = async (req, res) => {
         res.status(201).send({
             status: true,
             rawSiteUpdate: rawSiteUpdate,
-            message : "Installation date has been changed successfully"
+            message: "Installation date has been changed successfully"
         })
+
     } catch (error) {
         return res.status(500).send({
             status: false,
@@ -671,6 +510,8 @@ const updateInstallationDateOfRawSiteController = async (req, res) => {
 
 }
 
+
+// Function for getting total raw sites count
 const gettingRawSitesCountController = async (req, res) => {
     try {
         const totalRawSites = await rawSiteDataModel.find({}).estimatedDocumentCount();
@@ -688,6 +529,7 @@ const gettingRawSitesCountController = async (req, res) => {
         })
     }
 }
+
 
 module.exports = {
     gettingAllRawSiteDataController,

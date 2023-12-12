@@ -21,7 +21,6 @@ export const RawSitesTableComponent = () => {
         getTotalRawSitesCount();
     }, [])
 
-
     // Function for getting total raw sites count
     const getTotalRawSitesCount = async () => {
         try {
@@ -30,8 +29,8 @@ export const RawSitesTableComponent = () => {
             // console.log('data-product:', data)
             if (data.status) {
                 // setTotalPages(Math.ceil(data.totalProduct) / 2);
-
                 setTotalRawSites(data.totalRawSites);
+
             }
             setIsLoading(false);
 
@@ -45,58 +44,59 @@ export const RawSitesTableComponent = () => {
     }, [currentPage])
 
 
-    // FUnction to getting raw sites data with pagination
+    // Function to getting raw sites data with pagination
     const getAllRawSitesDataFn = async () => {
         try {
             const { data } = await axios.get(`http://localhost:8080/api/v1/raw-site/get-all-rawsitedata/${currentPage}/${rawSitesPerPage}`)
-            // console.log('data:', data)
+            console.log('data:', data)
             if (data) {
+
                 setRawSitesData(data.rawSites);
             }
         } catch (error) {
-
             toast.error("Something went wrong please try again later")
         }
     }
 
     // Function to updating raw site installation date
     const handleDateChange = async (date, dateString, pId) => {
+
         // console.log('dateString:', dateString)
         // console.log('date:', date)
         // console.log('pId:', pId)
-
         try {
             if (dateString) {
+                setIsLoading(true);
                 const { data } = await axios.put(`http://localhost:8080/api/v1/raw-site/update-installation-date-of-raw-site/${pId}`, {
                     installationDate: dateString
                 })
+
                 // console.log('data:', data)
                 if (data.status) {
                     getAllRawSitesDataFn()
                     toast.success(data.message);
-
                 } else {
                     toast.error(data.message)
                 }
+                setIsLoading(false);
             } else {
+
                 toast.error("Please select proper date")
             }
         } catch (error) {
             console.log(error.message)
         }
-
     };
 
     // Function to quick update raw site with electrician 
     const handleQuickUpdateSites = async () => {
-        try {
 
+        try {
             setIsLoading(true);
             const { data } = await axios.get("http://localhost:8080/api/v1/raw-site/quick-update-all-raw-sites");
             // console.log('data:', data)
             if (data.status) {
                 getAllRawSitesDataFn();
-
                 toast.success(data.message);
             } else {
                 toast.error(data.message)
@@ -108,10 +108,9 @@ export const RawSitesTableComponent = () => {
         }
     }
 
-
     // Function to quick update pending electrician to raw sites
-
     const handleQuickUpdatePendingElectrician = async () => {
+
         try {
             setIsLoading(true);
             const { data } = await axios.get("http://localhost:8080/api/v1/raw-site/quick-update-all-pending-raw-sites");
@@ -120,8 +119,8 @@ export const RawSitesTableComponent = () => {
                 getAllRawSitesDataFn();
                 toast.success(data.message)
             } else {
-
                 toast.error(data.message)
+
             }
             setIsLoading(false);
         } catch (error) {
@@ -131,6 +130,7 @@ export const RawSitesTableComponent = () => {
 
     // Function to update raw site based on grievance profile of electrician
     const handleGrievanceBasedAssign = async (pId) => {
+
         try {
             setIsLoading(true);
             const { data } = await axios.get(`http://localhost:8080/api/v1/raw-site/single-raw-site-update/${pId}`);
@@ -165,14 +165,13 @@ export const RawSitesTableComponent = () => {
             setIsLoading(false);
         } catch (error) {
             alert("Error in random assigned update");
-
         }
     }
 
     return (
         <>
-            <div id="feacture_box" className="d-flex justify-content-center mt-5 p-2 ms-auto me-auto gap-2 flex-wrap align-content-center">
 
+            <div id="feacture_box" className="d-flex justify-content-center mt-5 p-2 ms-auto me-auto gap-2 flex-wrap align-content-center">
                 <button className="btn btn-primary" onClick={handleQuickUpdateSites}>Quick Update Sites</button>
                 <button className="btn btn-secondary" onClick={handleQuickUpdatePendingElectrician}>Quick Update Pending Electrician</button>
             </div>
@@ -181,8 +180,8 @@ export const RawSitesTableComponent = () => {
                 <table className="table table-bordered align-middle">
                     <thead>
                         <tr>
-                            <th scope="col">Name</th>
 
+                            <th scope="col">Name</th>
                             <th scope="col">Phone</th>
                             <th scope="col">City</th>
                             <th scope="col">
@@ -191,8 +190,8 @@ export const RawSitesTableComponent = () => {
                                 </tr>
                                 <tr className="d-flex justify-content-center gap-3">
                                     <th scope="col">Name</th>
-                                    <th scope="col">Assigned Date</th>
 
+                                    <th scope="col">Assigned Date</th>
                                 </tr>
                             </th>
                             <th scope="col">Installation Date</th>
@@ -201,8 +200,8 @@ export const RawSitesTableComponent = () => {
                         </tr>
                     </thead>
                     <tbody>
+                        
                         {rawSitesData?.map((element, index) => {
-
                             return (
                                 <>
                                     <tr key={index}>
@@ -211,8 +210,8 @@ export const RawSitesTableComponent = () => {
                                         <td>{element.city}</td>
                                         <td>
                                             {element?.assignedElectritian?.map((item, index) => {
+                                                
                                                 return (
-
                                                     <>
                                                         <tr key={index} className="d-flex justify-content-center gap-3">
                                                             <td>{item.name}</td>
@@ -221,8 +220,8 @@ export const RawSitesTableComponent = () => {
                                                                     if (i._id === element._id && i.electricianAssignDate) {
                                                                         const formattedDate = new Date(i.electricianAssignDate).toISOString().split("T")[0];
                                                                         return formattedDate
-                                                                    }
 
+                                                                    }
                                                                     return null
                                                                 })}
                                                             </td>
@@ -231,8 +230,8 @@ export const RawSitesTableComponent = () => {
                                                 )
                                             })}
                                         </td>
-                                        <td className="d-flex flex-column gap-2">
 
+                                        <td className="d-flex flex-column gap-2">
                                             <span>{element.installationDate}</span>
                                             <DatePicker onChange={(date, dateString) => {
                                                 handleDateChange(date, dateString, element._id)
@@ -241,8 +240,8 @@ export const RawSitesTableComponent = () => {
                                         <td>{element.grievance ? "true" : "false"}</td>
                                         <td className="d-flex flex-column gap-2">
                                             <button className="btn btn-primary" onClick={() => {
-                                                handleGrievanceBasedAssign(element._id);
 
+                                                handleGrievanceBasedAssign(element._id);
                                             }}>Grievance Based Assign</button>
                                             <button className="btn btn-secondary" onClick={() => {
                                                 handleRandomAssign(element._id);
@@ -251,8 +250,8 @@ export const RawSitesTableComponent = () => {
                                     </tr>
                                 </>
                             )
-                        })}
 
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -261,15 +260,29 @@ export const RawSitesTableComponent = () => {
                     console.log('page:', page, "pageSize :", pageSize)
                     setCurrentPage(page);
                     setRawSitesPerPage(pageSize);
-                }} />
 
+                }} />
             </div>
             <Toaster />
-
             <div id={isLoading ? "model_Visible" : "model_hidden"}>
                 <div id="spinner_box">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div className="spinner-border text-secondary" role="status">
+
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+
+                    <div className="spinner-border text-secondary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
                     </div>
                 </div>
             </div>

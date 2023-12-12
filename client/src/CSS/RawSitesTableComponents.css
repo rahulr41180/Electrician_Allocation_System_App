@@ -20,24 +20,32 @@
     position: absolute;
     z-index: 10;
     width: 100%;
-    height: 78.8rem;
+
+    height: 84rem;
     top: 56px;
     background-color: rgb(214, 214, 233);
-    opacity: 0.5;
+    opacity: 0.8;
     display: flex;
 
     justify-content: center;
 }
 
+
 #spinner_box {
     /* border: 1px solid blue; */
-    width: 20%;
+    width: 25%;
     height: 7rem;
     position: relative;
     top: 35rem;
-
     display: flex;
     justify-content: center;
     align-items: center;
+
+    gap: 10px;
+    z-index: 100;
+    border-radius: 5px;
+    background-color: rgb(177, 177, 236);
+    box-shadow: rgb(38, 57, 77) 0px 20px 30px -10px;
+    opacity: 1;
 
 }

@@ -8,20 +8,24 @@ const { connectDB } = require("./config/db.js");
 
 dotenv.config();
 
+// App Creating
 const app = express();
 
-
+// Middlewares
 app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
+// Routers
 const rawSiteRouter = require("./routers/rawSiteDataRouter.js");
 const electricianRouter = require("./routers/electricianDataRouter.js");
 
+
+// API Calling
 app.use("/api/v1/raw-site", rawSiteRouter);
 app.use("/api/v1/electrician", electricianRouter);
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, async () => {
     try {
