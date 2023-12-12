@@ -1,0 +1,43 @@
+
+#feacture_box {
+
+    width: 36%;
+}
+
+#rawSitesTable_box {
+    border: 1px solid blue;
+    width: 95%;
+}
+
+#model_hidden {
+
+    display: none;
+}
+
+#model_Visible {
+
+    /* border: 1px solid blue; */
+    position: absolute;
+    z-index: 10;
+    width: 100%;
+    height: 78.8rem;
+    top: 56px;
+    background-color: rgb(214, 214, 233);
+    opacity: 0.5;
+    display: flex;
+
+    justify-content: center;
+}
+
+#spinner_box {
+    /* border: 1px solid blue; */
+    width: 20%;
+    height: 7rem;
+    position: relative;
+    top: 35rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}

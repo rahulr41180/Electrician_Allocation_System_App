@@ -16,8 +16,15 @@ const electricianSchema = new mongoose.Schema({
     },
     assignedSites : [
         {
-            type : mongoose.ObjectId,
-            ref : "raw-site-data"
+            _id : {
+                type : mongoose.ObjectId,
+                ref : "raw-site-data" 
+            },
+
+            electricianAssignDate : {
+                type : Date,
+                default : Date.now
+            }
         }
     ],
 

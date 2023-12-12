@@ -9,12 +9,14 @@ const {
     quickUpdateAllPendingRawSitesWithElectricianController, 
     singleRawSiteUpdateWithGrievanceElectrician, 
     singleRawSiteUpdateWithAnyElectrician,
-    updateInstallationDateOfRawSiteController
+    updateInstallationDateOfRawSiteController,
+
+    gettingRawSitesCountController
 
 } = require("../controllers/rawSiteDataController.js");
 
 // Getting All Raw Site Data || METHOD : GET
-router.get("/get-all-rawsitedata", gettingAllRawSiteDataController);
+router.get("/get-all-rawsitedata/:currentPage/:rawSitesPerPage", gettingAllRawSiteDataController);
 
 // Update Quick All Raw Sites With Electrician || METHOD : GET
 router.get("/quick-update-all-raw-sites", quickUpdateAllRawSitesWithElectricianController);
@@ -28,7 +30,11 @@ router.get("/single-raw-site-update/:pId", singleRawSiteUpdateWithGrievanceElect
 // Update Single Raw Site With or Without Gravience || METHOD : GET
 router.get("/single-raw-site-update-with-any-electrician/:pId", singleRawSiteUpdateWithAnyElectrician);
 
+
 // Update Installation Date of Raw Site || METHOD : PUT
 router.put("/update-installation-date-of-raw-site/:pId", updateInstallationDateOfRawSiteController);
+
+// Getting Raw Sites Count || METHOD : GET
+router.get("/get-raw-sites-count", gettingRawSitesCountController);
 
 module.exports = router;
