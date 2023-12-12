@@ -57,6 +57,7 @@ All the data got stored in and called from <b>MongoDB Database</b>.
 - Gravience based electrician assigning to raw sites
 - Random electrician assigning to raw sites
 - Installation date updating feature
+- We can see data in browser console
 
 <div style='page-break-after: always'></div>
 
