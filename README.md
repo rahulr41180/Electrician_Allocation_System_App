@@ -5,6 +5,12 @@ In this project I have tried to implement code for assigning the electrician to 
 
 <img width="98%" src="https://cdn-images-1.medium.com/max/1800/1*B5WLToFp5GAYEXQ2pKX0BQ.png" alt="" />
 
+<img width="98%" src="https://cdn-images-1.medium.com/max/1800/1*2iDnjNciXR-Zt2bGjWyfpg.png" alt="" />
+
+<img width="98%" src="https://cdn-images-1.medium.com/max/1800/1*Mp0MrLOmsNLhbEbv6HiWMw.png" alt="" />
+
+<img width="98%" src="https://cdn-images-1.medium.com/max/1800/1*3PXG3haQhXDgjr3kp6G-JA.png" alt="" />
+
 <div style='page-break-after: always'></div>
 
 ### <u>Run Locally</u>
